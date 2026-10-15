@@ -1,4 +1,4 @@
-import { getProduct } from "../data/catalog.ts";
+import { getProduct, products, type Catalog } from "../data/catalog.ts";
 import { MAX_CART_ITEMS, MAX_ITEM_QUANTITY, MAX_MESSAGE_LENGTH, type CartItem } from "./cart.ts";
 
 export const DRAFT_STORAGE_KEY = "flomira.order-drafts.v1";
@@ -119,12 +119,12 @@ export function formatRequestedDate(value: string): string {
   return date.toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" });
 }
 
-export function getDateBounds(items: readonly CartItem[], now: Date): {
+export function getDateBounds(items: readonly CartItem[], now: Date, catalog: Catalog = products): {
   today: string; min: string; max: string; leadTimeDays: number;
 } {
   const today = localCalendarDate(now);
   const safeItems = Array.isArray(items) ? items : [];
-  const leadTimeDays = safeItems.reduce((max, item) => Math.max(max, getProduct(record(item).productId as string)?.leadTimeDays ?? 0), 0);
+  const leadTimeDays = safeItems.reduce((max, item) => Math.max(max, getProduct(record(item).productId as string, catalog)?.leadTimeDays ?? 0), 0);
   return { today, min: addCalendarDays(today, leadTimeDays), max: addCalendarDays(today, MAX_HORIZON_DAYS), leadTimeDays };
 }
 
@@ -171,12 +171,12 @@ function detailErrors(value: unknown): { details: OrderDetails; errors: OrderErr
 }
 
 /** Creates a catalog-backed price snapshot; rejects an empty or invalid cart. */
-export function getOrderItems(items: readonly CartItem[]): DraftItem[] {
+export function getOrderItems(items: readonly CartItem[], catalog: Catalog = products): DraftItem[] {
   if (!Array.isArray(items) || items.length === 0 || items.length > MAX_CART_ITEMS) throw new Error(`Choose between 1 and ${MAX_CART_ITEMS} cake selections before reviewing.`);
   const seen = new Set<string>();
   return items.map((item) => {
     if (!item || typeof item !== "object") throw new Error("A cart selection is no longer valid. Update your cart before reviewing.");
-    const product = getProduct(item.productId);
+    const product = getProduct(item.productId, catalog);
     const size = product?.sizes.find((option) => option.id === item.sizeId);
     if (!product || !size || !product.flavors.includes(item.flavor)
       || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > MAX_ITEM_QUANTITY
@@ -202,22 +202,22 @@ export function getDraftSubtotal(items: readonly DraftItem[]): number {
 }
 
 /** Includes catalog prices/lead times and every cart selection; used to invalidate reviews. */
-export function cartFingerprint(items: readonly CartItem[]): string {
-  try { return JSON.stringify(getOrderItems(items)); }
+export function cartFingerprint(items: readonly CartItem[], catalog: Catalog = products): string {
+  try { return JSON.stringify(getOrderItems(items, catalog)); }
   catch {
     try { return JSON.stringify(items); }
     catch { return "invalid-cart"; }
   }
 }
 
-export function validateOrderDetails(value: unknown, items: readonly CartItem[], now: Date): {
+export function validateOrderDetails(value: unknown, items: readonly CartItem[], now: Date, catalog: Catalog = products): {
   details: OrderDetails; errors: OrderErrors; valid: boolean;
 } {
   const { details, errors } = detailErrors(value);
-  try { getOrderItems(items); } catch (error) {
+  try { getOrderItems(items, catalog); } catch (error) {
     errors.cart = error instanceof Error ? error.message : "Update your cart before reviewing.";
   }
-  const bounds = getDateBounds(items, now);
+  const bounds = getDateBounds(items, now, catalog);
   if (!bounds.today) errors.date = "Your device date could not be read. Check its date settings.";
   else if (!errors.date && details.date < bounds.min) errors.date = `Choose ${formatRequestedDate(bounds.min)} or later for this cart’s ${bounds.leadTimeDays}-day sample lead time.`;
   else if (!errors.date && details.date > bounds.max) errors.date = `Choose a date within ${MAX_HORIZON_DAYS} days, by ${formatRequestedDate(bounds.max)}.`;
@@ -227,11 +227,11 @@ export function validateOrderDetails(value: unknown, items: readonly CartItem[],
 /** Pure creation: caller supplies time and a unique reference; does not write storage. */
 export function createOrderDraft(value: unknown, items: readonly CartItem[], options: {
   now: Date; reference: string;
-}): OrderDraft {
-  const result = validateOrderDetails(value, items, options.now);
+}, catalog: Catalog = products): OrderDraft {
+  const result = validateOrderDetails(value, items, options.now, catalog);
   if (!result.valid) throw new Error(Object.values(result.errors)[0]);
   if (!/^FLO-[A-Z0-9-]{8,64}$/.test(options.reference)) throw new Error("A valid unique draft reference is required.");
-  const snapshot = getOrderItems(items);
+  const snapshot = getOrderItems(items, catalog);
   return {
     version: 1, reference: options.reference, createdAt: options.now.toISOString(),
     status: DRAFT_STATUS, details: result.details, items: snapshot,
@@ -253,7 +253,7 @@ function sanitizeDraftItem(value: unknown): DraftItem | null {
     allergens: item.allergens.map((allergen) => cleanOrderText(allergen, 100)).filter(Boolean),
     leadTimeDays: Number(item.leadTimeDays), quantity: Number(item.quantity), unitPriceCents: Number(item.unitPriceCents),
   };
-  if (!result.id || !result.productId || !result.productName || !result.sizeId || !result.sizeLabel || !result.flavor) return null;
+   if (!result.id || !result.productId || !result.productName || !result.sizeId || !result.sizeLabel || !result.flavor) return null;
   return result;
 }
 

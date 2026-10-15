@@ -1,4 +1,4 @@
-import { getProduct } from '../data/catalog.ts';
+import { getProduct, products, type Catalog } from '../data/catalog.ts';
 
 export type CartItem = {
   id: string;
@@ -26,9 +26,9 @@ function normalizeQuantity(value: unknown): number | null {
   return Math.min(MAX_ITEM_QUANTITY, Math.max(1, Math.trunc(value)));
 }
 
-function normalizeInput(value: unknown): CartInput | null {
+function normalizeInput(value: unknown, catalog: Catalog): CartInput | null {
   if (!isRecord(value) || typeof value.productId !== 'string') return null;
-  const product = getProduct(value.productId);
+  const product = getProduct(value.productId, catalog);
   const quantity = normalizeQuantity(value.quantity);
   if (
     !product ||
@@ -68,13 +68,13 @@ function validLineId(value: unknown): value is string {
 }
 
 /** Restores only known selections; repairs bounds, repeated IDs, and duplicate lines. */
-export function sanitizeCart(value: unknown): CartItem[] {
+export function sanitizeCart(value: unknown, catalog: Catalog = products): CartItem[] {
   if (!Array.isArray(value)) return [];
   const result: CartItem[] = [];
 
   for (const candidate of value) {
     if (!isRecord(candidate) || !validLineId(candidate.id)) continue;
-    const input = normalizeInput(candidate);
+    const input = normalizeInput(candidate, catalog);
     if (!input) continue;
     const existing = result.find((item) => sameSelection(item, input));
     if (existing) {
@@ -90,31 +90,31 @@ export function sanitizeCart(value: unknown): CartItem[] {
   return result;
 }
 
-export function sanitizeFavorites(value: unknown): string[] {
+export function sanitizeFavorites(value: unknown, catalog: Catalog = products): string[] {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.filter(
-    (id): id is string => typeof id === 'string' && getProduct(id) !== undefined,
+    (id): id is string => typeof id === 'string' && getProduct(id, catalog) !== undefined,
   ))];
 }
 
-export function getCartItemPrice(item: CartItem): number {
+export function getCartItemPrice(item: CartItem, catalog: Catalog = products): number {
   if (!isRecord(item) || !validLineId(item.id)) return 0;
-  const input = normalizeInput(item);
+  const input = normalizeInput(item, catalog);
   if (!input || input.quantity !== item.quantity || input.message !== item.message) return 0;
-  return getProduct(input.productId)?.sizes.find((size) => size.id === input.sizeId)?.price ?? 0;
+  return getProduct(input.productId, catalog)?.sizes.find((size) => size.id === input.sizeId)?.price ?? 0;
 }
 
-export function getCartSubtotal(items: readonly CartItem[]): number {
-  return sanitizeCart(items).reduce(
-    (total, item) => total + getCartItemPrice(item) * item.quantity,
+export function getCartSubtotal(items: readonly CartItem[], catalog: Catalog = products): number {
+  return sanitizeCart(items, catalog).reduce(
+    (total, item) => total + getCartItemPrice(item, catalog) * item.quantity,
     0,
   );
 }
 
 /** Pure, deterministic addition. Only identical selections merge, capped at 12. */
-export function addCartItem(items: readonly CartItem[], input: CartInput): CartItem[] {
-  const current = sanitizeCart(items);
-  const normalized = normalizeInput(input);
+export function addCartItem(items: readonly CartItem[], input: CartInput, catalog: Catalog = products): CartItem[] {
+  const current = sanitizeCart(items, catalog);
+  const normalized = normalizeInput(input, catalog);
   // New user input must be an integer in range; stored numeric bounds are repaired above.
   if (!normalized || normalized.quantity !== input.quantity) return current;
   const existing = current.find((item) => sameSelection(item, normalized));
@@ -127,8 +127,8 @@ export function addCartItem(items: readonly CartItem[], input: CartInput): CartI
   return [...current, { id: nextLineId(current), ...normalized }];
 }
 
-export function setCartQuantity(items: readonly CartItem[], id: string, quantity: number): CartItem[] {
-  const current = sanitizeCart(items);
+export function setCartQuantity(items: readonly CartItem[], id: string, quantity: number, catalog: Catalog = products): CartItem[] {
+  const current = sanitizeCart(items, catalog);
   const boundedQuantity = normalizeQuantity(quantity);
   if (boundedQuantity === null) return current;
   return current.map((item) => item.id === id ? { ...item, quantity: boundedQuantity } : item);

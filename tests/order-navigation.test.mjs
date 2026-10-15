@@ -4,7 +4,7 @@ import test from 'node:test';
 import { createScrollEnvironment } from './helpers/scroll-environment.mjs';
 
 const pointerClick = { button: 0, detail: 1 };
-const exitDuration = 760;
+const exitDuration = 560;
 const orderLink = (env) => env.container.querySelectorAll('.sw-topcta')[0];
 const exiting = (env) => env.container.className.split(' ').includes('is-navigating');
 
@@ -28,7 +28,7 @@ const declarations = (block) => Object.fromEntries(block.split(';').filter((item
   return [item.slice(0, separator).trim(), item.slice(separator + 1).trim()];
 }));
 
-test('Order now zooms and blurs once before opening the collection after 760ms', async (t) => {
+test('Order now zooms and blurs once before opening the collection after 560ms', async (t) => {
   const env = createScrollEnvironment();
   t.after(env.cleanup);
   await env.ready();
@@ -209,7 +209,7 @@ test('failed or stalled navigation restores the visible page without retrying', 
   await stalled.ready();
   orderLink(stalled).emit('click', pointerClick);
   stalled.runTimer(exitDuration);
-  stalled.runTimer(6500);
+  stalled.runTimer(3200);
   assert.equal(exiting(stalled), false);
   assert.match(stalled.container.querySelectorAll('.sw-navigation-status')[0].textContent, /not opened/);
   assert.deepEqual(stalled.navigations, []);
@@ -264,8 +264,8 @@ test('the outgoing camera zooms while sharp before blurring, with CSS and naviga
   assert.equal(animation, `sw-order-camera-exit ${exitDuration}ms linear both`);
   const camera = cssBlock(css, '@keyframes sw-order-camera-exit');
   assert.deepEqual(declarations(cssBlock(camera, '0%')), { transform: 'scale(1)', filter: 'blur(0)', opacity: '1' });
-  assert.deepEqual(declarations(cssBlock(camera, '35%')), { transform: 'scale(1.12)', filter: 'blur(0)', opacity: '1' });
-  assert.deepEqual(declarations(cssBlock(camera, '100%')), { transform: 'scale(1.24)', filter: 'blur(14px)', opacity: '.46' });
+  assert.deepEqual(declarations(cssBlock(camera, '32%')), { transform: 'scale(1.06)', filter: 'blur(0)', opacity: '1' });
+  assert.deepEqual(declarations(cssBlock(camera, '100%')), { transform: 'scale(1.12)', filter: 'blur(8px)', opacity: '.68' });
   assert.doesNotMatch(cssBlock(css, '.sw-stage{'), /animation|filter|will-change/, 'no exit effects on the resting scene');
   assert.doesNotMatch(css, /\.sw-root\.is-navigating \.sw-scene\{/, 'do not compound the camera zoom with a second scene zoom');
   const reset = declarations(cssBlock(cssBlock(css, '@media (prefers-reduced-motion:reduce),print'), '.sw-root.is-navigating .sw-stage'));
@@ -277,15 +277,15 @@ test('the outgoing camera zooms while sharp before blurring, with CSS and naviga
 test('the collection arrives with matching defocus and zoom, then settles fully clear without retained effects', () => {
   const css = readFileSync(new URL('../src/app/globals.css', import.meta.url), 'utf8');
   const entry = declarations(cssBlock(css, '.collection-entry'));
-  assert.equal(entry.animation, 'flomira-collection-enter 860ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards');
+  assert.equal(entry.animation, 'flomira-collection-enter 620ms cubic-bezier(0.22, 0.75, 0.2, 1) backwards');
   assert.equal(entry['transform-origin'], '50% 18svh', 'anchor to the viewport, not halfway down the product list');
   assert.equal(entry.filter, 'none');
   assert.equal(entry.transform, 'none');
   assert.equal(entry.opacity, '1');
   assert.equal(entry['will-change'], undefined);
   const arrival = cssBlock(css, '@keyframes flomira-collection-enter');
-  assert.deepEqual(declarations(cssBlock(arrival, '8%')), { opacity: '0.45', transform: 'scale(1.14)', filter: 'blur(14px)' });
-  assert.deepEqual(declarations(cssBlock(arrival, '60%')), { opacity: '0.95', transform: 'scale(1.025)', filter: 'blur(3px)' });
+  assert.deepEqual(declarations(cssBlock(arrival, '8%')), { opacity: '0.62', transform: 'scale(1.07)', filter: 'blur(8px)' });
+  assert.deepEqual(declarations(cssBlock(arrival, '60%')), { opacity: '0.96', transform: 'scale(1.015)', filter: 'blur(2px)' });
   assert.deepEqual(declarations(cssBlock(arrival, '100%')), { opacity: '1', transform: 'none', filter: 'none' });
 });
 

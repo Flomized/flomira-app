@@ -10,8 +10,8 @@ import { FavoriteButton } from './FavoriteButton';
 import { PreviewNote } from './PreviewNote';
 import { StorageNotice } from './StorageNotice';
 
-export function ProductDetail({ product }: { product: Product }) {
-  const { addItem, ready } = useCart();
+export function ProductDetail({ product, compact = false }: { product: Product; compact?: boolean }) {
+  const { addItem, ready, catalogError } = useCart();
   const [sizeId, setSizeId] = useState(product.sizes[0].id);
   const [flavor, setFlavor] = useState(product.flavors[0]);
   const [quantity, setQuantity] = useState(1);
@@ -35,30 +35,40 @@ export function ProductDetail({ product }: { product: Product }) {
   return (
     <>
       <StorageNotice />
-      <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-16">
-        <figure className="min-w-0">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-[#171414]">
-            <Image
-              src={product.image}
-              alt={product.imageAlt}
-              fill
-              sizes="(min-width: 1280px) 580px, (min-width: 1024px) 46vw, 90vw"
-              loading="lazy"
-              className="object-cover"
-            />
-            <span className="absolute bottom-5 left-5 rounded-full border border-white/20 bg-black/60 px-4 py-2 text-xs tracking-wide text-white backdrop-blur-sm">Collection inspiration</span>
-          </div>
-          <figcaption className="mt-4 max-w-lg text-xs leading-relaxed text-[#aaaaaa]">
-            An editorial image illustrating the FLOMIRA collection, not a photograph of this finished product.
-            Imagery may be shared across concepts.
-          </figcaption>
-        </figure>
+      <div className={compact ? 'min-w-0' : 'grid items-start gap-10 lg:grid-cols-2 lg:gap-16'}>
+        {!compact && (
+          <figure className="min-w-0">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-[#171414]">
+              {product.image ? (
+                <Image
+                  src={product.image}
+                  alt={product.imageAlt}
+                  fill
+                  sizes="(min-width: 1280px) 580px, (min-width: 1024px) 46vw, 90vw"
+                  loading="lazy"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[#aaaaaa]">Image coming soon</div>
+              )}
+              <span className="absolute bottom-5 left-5 rounded-full border border-white/20 bg-black/60 px-4 py-2 text-xs tracking-wide text-white backdrop-blur-sm">Collection inspiration</span>
+            </div>
+            <figcaption className="mt-4 max-w-lg text-xs leading-relaxed text-[#aaaaaa]">
+              An editorial image illustrating the FLOMIRA collection, not a photograph of this finished product.
+              Imagery may be shared across concepts.
+            </figcaption>
+          </figure>
+        )}
 
         <div className="min-w-0">
-          <p className="eyebrow mb-4">{product.category} · Concept preview</p>
-          <h1 className="mb-5 text-4xl font-medium leading-[1.08] tracking-tight md:text-5xl xl:text-6xl">{product.name}</h1>
-          <p className="mb-6 text-lg leading-relaxed text-[#aaaaaa]">{product.description}</p>
-          <PreviewNote />
+          {!compact && (
+            <>
+              <p className="eyebrow mb-4">{product.category} · Concept preview</p>
+              <h1 className="mb-5 text-4xl font-medium leading-[1.08] tracking-tight md:text-5xl xl:text-6xl">{product.name}</h1>
+              <p className="mb-6 text-lg leading-relaxed text-[#aaaaaa]">{product.description}</p>
+              <PreviewNote />
+            </>
+          )}
 
           <form onSubmit={addToCart} className="mt-8 space-y-6 border-t border-white/10 pt-8">
             <fieldset>
@@ -125,11 +135,12 @@ export function ProductDetail({ product }: { product: Product }) {
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <button type="submit" className="button-primary flex-1 disabled:cursor-wait disabled:opacity-50" disabled={!ready}>
-                {ready ? 'Add to preview cart' : 'Restoring your cart…'}
+              <button type="submit" className="button-primary flex-1 disabled:cursor-wait disabled:opacity-50" disabled={!ready || Boolean(catalogError)}>
+                {catalogError ? 'Live catalog unavailable' : ready ? 'Add to preview cart' : 'Restoring your cart…'}
               </button>
               <FavoriteButton productId={product.id} name={product.name} showLabel />
             </div>
+            {catalogError && <p className="form-error" role="alert">{catalogError}</p>}
             <div aria-live="polite" aria-atomic="true" className="min-h-6 text-sm leading-relaxed">
               {feedback && (
                 <p className={feedback.success ? 'text-[#e0bdc3]' : 'form-error'}>

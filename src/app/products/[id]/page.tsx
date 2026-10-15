@@ -1,20 +1,41 @@
 import { Metadata } from 'next';
+import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getProducts } from '@/lib/firestore';
-import WhatsAppButton from '@/components/WhatsAppButton';
+import { websiteProductToProduct } from '@/data/catalog';
 import OrderForm from '@/components/OrderForm';
+import { ProductDetail } from '@/components/catalog/ProductDetail';
+import PublicPageFrame from '@/components/PublicPageFrame';
+import type { WebsiteProduct } from '@/types/website';
 
-export const dynamic = 'force-dynamic';
+// Product details depend on live Firestore data; this route is allowed to wait
+// while the collection resolves instead of blocking the static collection shell.
+export const instant = false;
 
 type Props = {
   params: { id: string };
 };
 
+async function loadProducts(): Promise<WebsiteProduct[] | null> {
+  await connection();
+  try {
+    return await getProducts();
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const products = await getProducts();
-  const product = products.find((p) => p.id === params.id);
+  const products = await loadProducts();
+  if (!products) {
+    return {
+      title: 'FLOMIRA product',
+      description: 'The FLOMIRA product catalogue is temporarily unavailable.',
+    };
+  }
+  const product = products.find((p) => p.id === params.id || p.slug === params.id);
 
   if (!product) {
     return {
@@ -29,24 +50,43 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
-  const products = await getProducts();
-  const product = products.find((p) => p.id === params.id);
+  const products = await loadProducts();
+  if (!products) {
+    return (
+      <>
+        <PublicPageFrame>
+          <div className="shop-page">
+            <div className="surface px-6 py-16 text-center" role="alert">
+              <p className="eyebrow">A small pause in the kitchen</p>
+              <h1 className="mt-3 text-3xl font-semibold">This product is temporarily unavailable</h1>
+              <p className="muted mx-auto mt-3 max-w-md text-sm leading-7">
+                We could not reach the live product catalogue. Please refresh in a moment or contact FLOMIRA for help.
+              </p>
+              <Link href="/products" className="button-secondary mt-7">Back to the collection</Link>
+            </div>
+          </div>
+        </PublicPageFrame>
+      </>
+    );
+  }
+  const product = products.find((p) => p.id === params.id || p.slug === params.id);
 
   if (!product) {
     notFound();
   }
 
+  const localProduct = websiteProductToProduct(product);
+
   return (
     <>
-      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="container mx-auto px-4 py-8">
-          {/* Back Button */}
+      <PublicPageFrame>
+        <div className="shop-page">
           <Link
             href="/products"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6"
+            className="button-secondary mb-8"
           >
             <svg
-              className="w-5 h-5 mr-2"
+              className="size-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -61,86 +101,76 @@ export default async function ProductDetailPage({ params }: Props) {
             Back to Products
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Product Images */}
-            <div className="space-y-4">
-              {/* Main Image */}
-              <div className="relative h-96 bg-gray-200 rounded-2xl overflow-hidden">
-                {product.images && product.images.length > 0 ? (
+          <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-12">
+            <section aria-label={`${product.name} images`} className="min-w-0">
+              <div className="relative h-96 overflow-hidden rounded-3xl border border-[var(--flomira-line-strong)] bg-[var(--flomira-surface-raised)] shadow-[0_1.25rem_3rem_rgba(0,0,0,0.3)] md:h-[34rem]">
+                {product.imageUrl ? (
                   <Image
-                    src={product.images[0]}
-                    alt={product.name}
+                    src={product.imageUrl}
+                    alt={product.imageAlt}
                     fill
                     className="object-cover"
                     priority
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Image Available
+                  <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_50%_30%,rgba(183,110,121,0.24),transparent_55%),var(--flomira-surface-raised)] px-6 text-center text-sm text-[var(--flomira-muted)]">
+                    Image coming soon
                   </div>
                 )}
               </div>
 
-              {/* Thumbnail Gallery */}
-              {product.images && product.images.length > 1 && (
-                <div className="grid grid-cols-4 gap-4">
-                  {product.images.slice(1, 5).map((image, index) => (
-                    <div
-                      key={index}
-                      className="relative h-24 bg-gray-200 rounded-lg overflow-hidden"
-                    >
-                      <Image
-                        src={image}
-                        alt={`${product.name} ${index + 2}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Product Details */}
-              <div className="bg-white rounded-2xl shadow-md p-6 mt-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              <div className="surface mt-6 p-6 md:p-8">
+                <p className="eyebrow mb-3">FLOMIRA collection</p>
+                <h1 id="product-title" className="text-3xl font-semibold tracking-tight md:text-4xl">
                   {product.name}
                 </h1>
 
                 {product.description && (
-                  <p className="text-gray-600 mb-6 leading-relaxed">
+                  <p className="muted mt-4 leading-7">
                     {product.description}
                   </p>
                 )}
 
-                {/* Sizes and Prices */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Available Sizes
-                  </h3>
-                  <div className="space-y-3">
+                <div className="mt-7">
+                  <h2 className="mb-3 text-xl font-semibold">Available sizes</h2>
+                  <div className="space-y-2">
                     {product.sizes.map((size) => (
                       <div
                         key={size.id}
-                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--flomira-line)] bg-[rgba(36,32,24,0.72)] px-4 py-3"
                       >
-                        <span className="text-gray-700 font-medium">
-                          {size.name}
+                        <span className="font-medium text-[var(--flomira-warm)]">
+                          {size.label}
+                          {size.servings > 0 && <span className="muted ml-2 text-sm">({size.servings} servings)</span>}
                         </span>
-                        <span className="text-blue-600 font-bold text-lg">
-                          {size.price.toFixed(2)} TK
+                        <span className="text-lg font-semibold text-[var(--flomira-copper)]">
+                          {size.basePrice.toFixed(2)} TK
                         </span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Allergens Warning */}
+                {product.flavors.length > 0 && (
+                  <div className="mt-7" aria-labelledby="product-flavors-title">
+                    <h2 id="product-flavors-title" className="mb-3 text-xl font-semibold">Available flavors</h2>
+                    <ul className="space-y-2">
+                      {product.flavors.map((flavor) => (
+                        <li key={flavor.name} className="rounded-2xl border border-[var(--flomira-line)] bg-[rgba(36,32,24,0.72)] px-4 py-3">
+                          <p className="font-medium text-[var(--flomira-warm)]">{flavor.name}</p>
+                          {flavor.description && <p className="muted mt-1 text-sm leading-6">{flavor.description}</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {product.allergens && product.allergens.length > 0 && (
-                  <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded">
+                  <div className="mt-7 rounded-2xl border-l-4 border-[var(--flomira-copper)] bg-[rgba(201,154,128,0.1)] p-4">
                     <div className="flex">
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         <svg
-                          className="h-5 w-5 text-orange-400"
+                          className="size-5 text-[var(--flomira-copper)]"
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -152,8 +182,8 @@ export default async function ProductDetailPage({ params }: Props) {
                         </svg>
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm text-orange-700">
-                          <span className="font-medium">Allergen Warning:</span>{' '}
+                        <p className="text-sm leading-6 text-[var(--flomira-muted)]">
+                          <span className="font-semibold text-[var(--flomira-blush)]">Allergen warning:</span>{' '}
                           This product contains {product.allergens.join(', ')}
                         </p>
                       </div>
@@ -161,17 +191,24 @@ export default async function ProductDetailPage({ params }: Props) {
                   </div>
                 )}
               </div>
-            </div>
+            </section>
 
-            {/* Order Form */}
-            <div className="lg:sticky lg:top-8 h-fit">
+            <section className="h-fit lg:sticky lg:top-28" aria-label={`Order ${product.name}`}>
               <OrderForm product={product} />
-            </div>
+              {localProduct && (
+                <div className="surface mt-8 p-6 md:p-8">
+                  <p className="eyebrow mb-3">Storefront preview</p>
+                  <h2 className="text-2xl font-semibold tracking-tight">Save a local cake plan</h2>
+                  <p className="muted mt-3 text-sm leading-6">Choose a sample size, flavor, and note to keep a preview selection in this browser. It is separate from the live order form above.</p>
+                  <div className="mt-6">
+                    <ProductDetail product={localProduct} compact />
+                  </div>
+                </div>
+              )}
+            </section>
           </div>
         </div>
-      </main>
-
-      <WhatsAppButton />
+      </PublicPageFrame>
     </>
   );
 }

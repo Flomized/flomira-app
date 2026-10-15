@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { FavoritesView } from '../../components/catalog/FavoritesView';
+import PublicPageFrame from '../../components/PublicPageFrame';
 import { PreviewNote } from '../../components/catalog/PreviewNote';
 
 export const metadata: Metadata = {
@@ -10,14 +11,16 @@ export const metadata: Metadata = {
 
 export default function FavoritesPage() {
   return (
-    <div className="shop-page">
-      <div className="mb-12">
-        <p className="eyebrow mb-5">A collection of your own</p>
-        <h1 className="mb-5 text-5xl font-medium tracking-tight md:text-7xl">Your favorites.</h1>
-        <p className="mb-6 max-w-xl text-lg leading-relaxed text-[#aaaaaa]">The ones you keep coming back to. Save a little inspiration for another day.</p>
-        <PreviewNote images />
+    <PublicPageFrame>
+      <div className="shop-page">
+        <header className="mb-12 max-w-3xl">
+          <p className="eyebrow mb-5">A collection of your own</p>
+          <h1 className="text-4xl font-medium tracking-tight sm:text-6xl">Your favorites.</h1>
+          <p className="muted mt-5 max-w-xl text-lg leading-relaxed">The ones you keep coming back to. Save a little inspiration for another day.</p>
+          <PreviewNote images />
+        </header>
+        <FavoritesView />
       </div>
-      <FavoritesView />
-    </div>
+    </PublicPageFrame>
   );
 }
