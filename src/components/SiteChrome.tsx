@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import { useCart } from './CartProvider';
+import { useBusinessSettings } from './BusinessSettingsProvider';
+import type { BusinessSettings } from '@/types/website';
 
 const navItems = [
   { href: '/products', label: 'Collection' },
@@ -13,11 +15,19 @@ const navItems = [
   { href: '/faq', label: 'FAQ' },
 ];
 
-function Brand() {
+function Brand({ settings }: { settings: BusinessSettings | null }) {
+  const businessName = settings?.businessName?.trim() || 'FLOMIRA';
+  const logoUrl = settings?.logoUrl?.trim();
+
   return (
-    <Link href="/" className="site-brand" aria-label="FLOMIRA home">
-      <span className="site-brand__mark" aria-hidden="true" />
-      <span>FLOMIRA</span>
+    <Link href="/" className="site-brand" aria-label={`${businessName} home`}>
+      {logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logoUrl} alt="" className="site-brand__logo" />
+      ) : (
+        <span className="site-brand__mark" aria-hidden="true" />
+      )}
+      <span>{businessName}</span>
     </Link>
   );
 }
@@ -39,6 +49,7 @@ function CartLink({ mobile = false }: { mobile?: boolean }) {
 export default function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { favorites } = useCart();
+  const { settings } = useBusinessSettings();
   const [menuPath, setMenuPath] = useState<string | null>(null);
   const menuOpen = menuPath === pathname;
 
@@ -46,7 +57,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
     <div className="site-frame">
       <header className="site-header">
         <div className="site-header__inner">
-          <Brand />
+          <Brand settings={settings} />
           <nav className="site-nav" aria-label="Main navigation">
             {navItems.map((item) => (
               <Link
@@ -93,8 +104,8 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
       <footer className="site-footer">
         <div className="site-footer__top">
           <div>
-            <Brand />
-            <p className="site-footer__copy">Cakes made with love, imagined with intention.</p>
+            <Brand settings={settings} />
+            <p className="site-footer__copy">{settings?.description?.trim() || 'Cakes made with love, imagined with intention.'}</p>
           </div>
           <div className="site-footer__links" aria-label="Footer navigation">
             <Link href="/products">Collection</Link>
@@ -105,7 +116,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="site-footer__bottom">
-          <p>Storefront preview · Orders and payments are not yet connected.</p>
+          <p>Preview cart and drafts stay on this browser · Live order requests are sent for confirmation.</p>
           <Link href="/">Back to the experience <span aria-hidden="true">↗</span></Link>
         </div>
       </footer>

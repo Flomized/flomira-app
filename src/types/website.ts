@@ -1,16 +1,29 @@
-export interface ProductSize {
-  id: string;
+export interface ProductFlavor {
   name: string;
-  price: number;
+  description: string;
+}
+
+export interface ProductSize {
+  /** A stable client-side key derived at the Firestore boundary when absent. */
+  id?: string;
+  label: string;
+  servings: number;
+  basePrice: number;
 }
 
 export interface WebsiteProduct {
   id: string;
+  slug: string;
   name: string;
-  description?: string;
-  images?: string[];
+  category: string;
+  description: string;
+  imageUrl: string;
+  imageAlt: string;
+  flavors: ProductFlavor[];
   sizes: ProductSize[];
-  allergens?: string[];
+  allergens: string[];
+  leadTimeDays: number;
+  featured: boolean;
   visible: boolean;
   createdAt: string;
   updatedAt: string;

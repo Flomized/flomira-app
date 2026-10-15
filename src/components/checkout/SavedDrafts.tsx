@@ -49,7 +49,12 @@ export default function SavedDrafts() {
     catch { setError("The print dialog could not open. Use your browser’s Print command to print the selected summary."); }
   }
 
-  if (raw === STORAGE_LOADING) return <p className="surface p-8" role="status">Reading drafts on this browser…</p>;
+  if (raw === STORAGE_LOADING) return (
+    <div className="surface p-8 text-center sm:p-12" role="status" aria-busy="true">
+      <p className="eyebrow mb-3">One moment</p>
+      <p className="muted">Reading drafts on this browser…</p>
+    </div>
+  );
   if (raw === STORAGE_UNAVAILABLE) return <div className="surface space-y-4 p-8" role="alert">
     <h2 className="text-2xl font-semibold">Saved drafts could not be read.</h2>
     <p className="muted leading-relaxed">Local storage is blocked or unavailable in this browser. Check browser permissions and refresh this page. We cannot confirm whether any drafts are saved.</p>

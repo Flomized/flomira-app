@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { getProduct } from '../data/catalog.ts';
+import { getProduct, websiteProductsToCatalog, type Product } from '../data/catalog.ts';
+import { getProducts } from '../lib/firestore.ts';
 import {
   addCartItem,
   CART_STORAGE_KEY,
@@ -19,6 +20,9 @@ type CartContextValue = {
   count: number;
   subtotal: number;
   favorites: string[];
+  catalog: Product[];
+  catalogReady: boolean;
+  catalogError: string | null;
   storageError: string | null;
   addItem(input: Omit<CartItem, 'id'>): boolean;
   updateQuantity(id: string, quantity: number): void;
@@ -27,11 +31,14 @@ type CartContextValue = {
   toggleFavorite(productId: string): void;
 };
 
-type Snapshot = Pick<CartContextValue, 'items' | 'favorites' | 'ready' | 'storageError'>;
+type Snapshot = Pick<CartContextValue, 'items' | 'favorites' | 'catalog' | 'catalogReady' | 'catalogError' | 'ready' | 'storageError'>;
 
 const INITIAL_SNAPSHOT: Snapshot = {
   items: [],
   favorites: [],
+  catalog: [],
+  catalogReady: false,
+  catalogError: null,
   ready: false,
   storageError: null,
 };
@@ -94,13 +101,29 @@ function createCartStore() {
   }
 
   function restore(key?: string | null) {
+    if (!snapshot.catalogReady) return;
     const items = !key || key === CART_STORAGE_KEY
-      ? readStored(CART_STORAGE_KEY, sanitizeCart, snapshot.items)
+      ? readStored(CART_STORAGE_KEY, (value) => sanitizeCart(value, snapshot.catalog), snapshot.items)
       : snapshot.items;
     const favorites = !key || key === FAVORITES_STORAGE_KEY
-      ? readStored(FAVORITES_STORAGE_KEY, sanitizeFavorites, snapshot.favorites)
+      ? readStored(FAVORITES_STORAGE_KEY, (value) => sanitizeFavorites(value, snapshot.catalog), snapshot.favorites)
       : snapshot.favorites;
-    publish({ items, favorites, ready: true, storageError: errorMessage() });
+    publish({ ...snapshot, items, favorites, ready: true, storageError: errorMessage() });
+  }
+
+  async function loadCatalog() {
+    try {
+      const liveProducts = await getProducts();
+      const catalog = websiteProductsToCatalog(liveProducts);
+      publish({ ...snapshot, catalog, catalogReady: true, catalogError: null });
+      restore();
+    } catch {
+      publish({
+        ...snapshot,
+        catalogReady: true,
+        catalogError: 'The live product catalog could not be loaded. Refresh to try again.',
+      });
+    }
   }
 
   return {
@@ -110,10 +133,11 @@ function createCartStore() {
     },
     getSnapshot: () => snapshot,
     getServerSnapshot: () => INITIAL_SNAPSHOT,
+    loadCatalog,
     restore,
     addItem(input: Omit<CartItem, 'id'>): boolean {
-      if (!snapshot.ready) return false;
-      const next = addCartItem(snapshot.items, input);
+      if (!snapshot.ready || !snapshot.catalogReady) return false;
+      const next = addCartItem(snapshot.items, input, snapshot.catalog);
       const previousCount = snapshot.items.reduce((total, item) => total + item.quantity, 0);
       const nextCount = next.reduce((total, item) => total + item.quantity, 0);
       // Refuse the whole request if it would exceed a line/cart limit, so
@@ -123,7 +147,7 @@ function createCartStore() {
       return true;
     },
     updateQuantity(id: string, quantity: number) {
-      if (snapshot.ready) saveItems(setCartQuantity(snapshot.items, id, quantity));
+      if (snapshot.ready) saveItems(setCartQuantity(snapshot.items, id, quantity, snapshot.catalog));
     },
     removeItem(id: string) {
       if (snapshot.ready) saveItems(snapshot.items.filter((item) => item.id !== id));
@@ -132,7 +156,7 @@ function createCartStore() {
       if (snapshot.ready) saveItems([]);
     },
     toggleFavorite(productId: string) {
-      if (!snapshot.ready || !getProduct(productId)) return;
+      if (!snapshot.ready || !getProduct(productId, snapshot.catalog)) return;
       const favorites = snapshot.favorites.includes(productId)
         ? snapshot.favorites.filter((id) => id !== productId)
         : [...snapshot.favorites, productId];
@@ -149,7 +173,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
 
   useEffect(() => {
-    store.restore();
+    void store.loadCatalog();
     function synchronize(event: StorageEvent) {
       if (event.key !== null && event.key !== CART_STORAGE_KEY && event.key !== FAVORITES_STORAGE_KEY) return;
       try {
@@ -166,7 +190,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value: CartContextValue = {
     ...snapshot,
     count: snapshot.items.reduce((total, item) => total + item.quantity, 0),
-    subtotal: getCartSubtotal(snapshot.items),
+    subtotal: getCartSubtotal(snapshot.items, snapshot.catalog),
     addItem: store.addItem,
     updateQuantity: store.updateQuantity,
     removeItem: store.removeItem,

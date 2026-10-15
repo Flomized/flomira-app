@@ -1,40 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getBusinessSettings } from '@/lib/firestore';
-import type { BusinessSettings } from '@/types/website';
+import { useBusinessSettings } from './BusinessSettingsProvider';
+import { getWhatsAppUrl } from '@/lib/whatsapp';
 
 export default function WhatsAppButton() {
-  const [whatsappNumber, setWhatsappNumber] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { settings, loading } = useBusinessSettings();
+  const whatsappNumber = settings?.whatsappNumber;
+  const whatsappUrl = getWhatsAppUrl(whatsappNumber, 'Hi! I would like to inquire about your products.');
 
-  useEffect(() => {
-    async function fetchSettings() {
-      try {
-        const settings = await getBusinessSettings();
-        if (settings) {
-          setWhatsappNumber(settings.whatsappNumber);
-        }
-      } catch (error) {
-        console.error('Failed to fetch WhatsApp number:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchSettings();
-  }, []);
-
-  if (loading || !whatsappNumber) {
+  if (loading || !whatsappUrl) {
     return null;
   }
 
   const handleClick = () => {
-    // Remove all non-digit characters except +
-    const cleanNumber = whatsappNumber.replace(/[^\d+]/g, '');
-    const message = encodeURIComponent('Hi! I would like to inquire about your products.');
-    const url = `https://wa.me/${cleanNumber}?text=${message}`;
-    window.open(url, '_blank');
+    window.open(whatsappUrl, '_blank');
   };
 
   return (

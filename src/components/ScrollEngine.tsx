@@ -2,12 +2,17 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useBusinessSettings } from '@/components/BusinessSettingsProvider';
 import { siteConfig, sections, connectors } from '@/data/content';
 
 export default function ScrollEngine() {
   const router = useRouter();
+  const { settings } = useBusinessSettings();
   const containerRef = useRef<HTMLDivElement>(null);
   const mountedRef = useRef(false);
+  const businessName = settings?.businessName?.trim() || siteConfig.brand.name;
+  const businessLogo = settings?.logoUrl?.trim() || '';
+  const businessDescription = settings?.description?.trim() || '';
 
   useEffect(() => {
     if (typeof window === 'undefined' || !containerRef.current || mountedRef.current) return;
@@ -20,7 +25,12 @@ export default function ScrollEngine() {
       if (disposed || !containerRef.current) return;
       const { mountLetsScroll } = module;
       cleanup = mountLetsScroll(containerRef.current, {
-        brand: siteConfig.brand,
+        brand: {
+          ...siteConfig.brand,
+          name: businessName,
+          logoUrl: businessLogo,
+          description: businessDescription,
+        },
         cta: siteConfig.cta,
         hint: siteConfig.hint,
         diveScroll: siteConfig.diveScroll,
@@ -54,7 +64,7 @@ export default function ScrollEngine() {
       mountedRef.current = false;
     };
 
-  }, [router]);
+  }, [router, businessName, businessLogo, businessDescription]);
 
   return <div ref={containerRef} id="world" className="sw-root w-full min-h-screen" />;
 }

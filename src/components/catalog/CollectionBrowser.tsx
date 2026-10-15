@@ -1,23 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { products, type Product } from '../../data/catalog.ts';
+import { useMemo, useState } from 'react';
+import type { Product } from '../../data/catalog.ts';
+import { useCart } from '../CartProvider';
 import { ProductCard } from './ProductCard';
 import { StorageNotice } from './StorageNotice';
-
-const categories = ['All concepts', ...new Set(products.map((product) => product.category))];
 
 function startingPrice(product: Product) {
   return Math.min(...product.sizes.map((size) => size.price));
 }
 
 export function CollectionBrowser() {
+  const { catalog, ready, catalogError } = useCart();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All concepts');
   const [sort, setSort] = useState('featured');
+  const categories = useMemo(() => ['All concepts', ...new Set(catalog.map((product) => product.category))], [catalog]);
   const normalizedQuery = query.trim().toLocaleLowerCase('en-US');
 
-  const visible = products.filter((product) => {
+  const visible = catalog.filter((product) => {
     const matchesCategory = category === 'All concepts' || product.category === category;
     const searchable = [product.name, product.description, product.category, ...product.flavors].join(' ').toLocaleLowerCase('en-US');
     return matchesCategory && searchable.includes(normalizedQuery);
@@ -37,6 +38,18 @@ export function CollectionBrowser() {
   return (
     <section aria-label="Explore the collection">
       <StorageNotice />
+      {catalogError ? (
+        <div className="surface p-8 text-center sm:p-12" role="alert">
+          <p className="eyebrow mb-3">The collection is taking a moment</p>
+          <p className="muted">{catalogError}</p>
+        </div>
+      ) : !ready ? (
+        <div className="surface p-8 text-center sm:p-12" role="status" aria-busy="true">
+          <p className="eyebrow mb-3">One moment</p>
+          <p className="muted">Loading the live collection…</p>
+        </div>
+      ) : (
+        <>
       <div className="mb-8 space-y-6 border-y border-white/10 py-6">
         <div className="grid gap-5 md:grid-cols-[1fr_16rem]">
           <div>
@@ -102,6 +115,8 @@ export function CollectionBrowser() {
           </div>
         )}
       </div>
+        </>
+      )}
     </section>
   );
 }

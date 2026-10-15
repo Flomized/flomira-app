@@ -1,9 +1,9 @@
 export function PreviewNote({ images = false }: { images?: boolean }) {
   return (
-    <div className="max-w-3xl space-y-2 text-sm leading-relaxed text-[#aaaaaa]">
+    <div className="surface mt-6 max-w-3xl space-y-2 p-4 text-sm leading-relaxed muted sm:p-5">
       <p>
-        <span className="text-[#cba0a5]">Storefront preview.</span> All products, USD prices,
-        flavors, portions, allergens, and lead times are sample information. No orders or payments are taken.
+         <span className="text-[#cba0a5]">Storefront preview.</span> Cart, favorites, and saved drafts stay in this browser.
+         Product detail pages also offer a separate live order request when delivery settings are configured; no online payment is taken.
       </p>
       {images && (
         <p>

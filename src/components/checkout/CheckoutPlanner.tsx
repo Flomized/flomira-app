@@ -43,7 +43,7 @@ export default function CheckoutPlanner() {
   const pendingReference = useRef<string | null>(null);
   const errorSummary = useRef<HTMLDivElement>(null);
   const stepHeading = useRef<HTMLHeadingElement>(null);
-  const currentFingerprint = cartFingerprint(cart.items);
+  const currentFingerprint = cartFingerprint(cart.items, cart.catalog);
   const staleReview = Boolean(review && review.fingerprint !== currentFingerprint);
 
   useEffect(() => { if (Object.keys(errors).length) errorSummary.current?.focus(); }, [errors]);
@@ -65,12 +65,12 @@ export default function CheckoutPlanner() {
   function handleReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setOperationError("");
-    const checked = validateOrderDetails(details, cart.items, new Date());
+    const checked = validateOrderDetails(details, cart.items, new Date(), cart.catalog);
     setErrors(checked.errors);
     if (!checked.valid) return;
-    const items = getOrderItems(cart.items);
+    const items = getOrderItems(cart.items, cart.catalog);
     setDetails(checked.details);
-    setReview({ details: checked.details, items, sampleSubtotalCents: getDraftSubtotal(items), fingerprint: cartFingerprint(cart.items) });
+    setReview({ details: checked.details, items, sampleSubtotalCents: getDraftSubtotal(items), fingerprint: cartFingerprint(cart.items, cart.catalog) });
     setConsent(false);
     setNotice("");
     pendingReference.current = null;
@@ -87,7 +87,7 @@ export default function CheckoutPlanner() {
   function saveDraft() {
     if (saveLock.current || saved) return;
     setOperationError("");
-    if (!review || review.fingerprint !== cartFingerprint(cart.items)) {
+    if (!review || review.fingerprint !== cartFingerprint(cart.items, cart.catalog)) {
       setOperationError("Your cart has changed. Return to details and review the updated selections before saving.");
       return;
     }
@@ -96,7 +96,7 @@ export default function CheckoutPlanner() {
       document.getElementById("storage-consent")?.focus();
       return;
     }
-    const checked = validateOrderDetails(review.details, cart.items, new Date());
+    const checked = validateOrderDetails(review.details, cart.items, new Date(), cart.catalog);
     if (!checked.valid) {
       setErrors(checked.errors);
       setReview(null);
@@ -107,7 +107,7 @@ export default function CheckoutPlanner() {
     setSaving(true);
     try {
       pendingReference.current ??= newDraftReference();
-      const draft = createOrderDraft(review.details, cart.items, { now: new Date(), reference: pendingReference.current });
+      const draft = createOrderDraft(review.details, cart.items, { now: new Date(), reference: pendingReference.current }, cart.catalog);
       const verified = saveDraftLocally(draft);
       setSaved(verified);
       setNotice("Draft saved and read back successfully on this browser. It has not been submitted.");
@@ -143,7 +143,19 @@ export default function CheckoutPlanner() {
     catch { setOperationError("The print dialog could not open. Use your browser’s Print command to print this summary."); }
   }
 
-  if (!cart.ready || !today) return <div className="surface p-8" role="status">Loading your local planner…</div>;
+  if (cart.catalogError) return (
+    <div className="surface p-8 text-center sm:p-12" role="alert">
+      <p className="eyebrow mb-3">The collection is taking a moment</p>
+      <p className="muted">{cart.catalogError}</p>
+    </div>
+  );
+
+  if (!cart.ready || !today) return (
+    <div className="surface p-8 text-center sm:p-12" role="status" aria-busy="true">
+      <p className="eyebrow mb-3">One moment</p>
+      <p className="muted">Loading your local planner…</p>
+    </div>
+  );
 
   if (saved) return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -176,13 +188,19 @@ export default function CheckoutPlanner() {
     </div>
   );
 
-  const bounds = getDateBounds(cart.items, new Date(`${today}T12:00:00`));
+  const bounds = getDateBounds(cart.items, new Date(`${today}T12:00:00`), cart.catalog);
 
   return (
     <div className="space-y-8">
-      <ol className="print-exclude flex flex-wrap gap-6 text-sm" aria-label="Draft steps">
-        <li aria-current={!review || staleReview ? "step" : undefined} className={!review || staleReview ? "text-[#cba0a5]" : "muted"}>01 · Requested details</li>
-        <li aria-current={review && !staleReview ? "step" : undefined} className={review && !staleReview ? "text-[#cba0a5]" : "muted"}>02 · Review & save locally</li>
+      <ol className="print-exclude grid gap-3 text-sm sm:grid-cols-2" aria-label="Draft steps">
+        <li aria-current={!review || staleReview ? "step" : undefined} className={`rounded-2xl border p-4 ${!review || staleReview ? "border-[#cba0a5]/60 bg-[#b76e79]/10 text-[#e0bdc3]" : "border-white/10 muted"}`}>
+          <span className="eyebrow mb-1 block">Step 01</span>
+          <span>Requested details</span>
+        </li>
+        <li aria-current={review && !staleReview ? "step" : undefined} className={`rounded-2xl border p-4 ${review && !staleReview ? "border-[#cba0a5]/60 bg-[#b76e79]/10 text-[#e0bdc3]" : "border-white/10 muted"}`}>
+          <span className="eyebrow mb-1 block">Step 02</span>
+          <span>Review & save locally</span>
+        </li>
       </ol>
       {notice && <p className="surface print-exclude p-4" role="status">{notice}</p>}
       {cart.storageError && <p className="form-error print-exclude" role="alert">{cart.storageError}</p>}

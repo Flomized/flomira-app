@@ -70,7 +70,7 @@
    ========================================================================== */
 
 // The exit keyframes and delayed navigation share one clock.
-const NAVIGATION_EXIT_MS = 760;
+const NAVIGATION_EXIT_MS = 560;
 
 function mountLetsScroll(container, config) {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -146,8 +146,25 @@ function mountLetsScroll(container, config) {
   const topbar = el('div', 'sw-topbar');
   if (config.brand) {
     const brand = el('a', 'sw-brand'); brand.href = (config.brand.href || '#');
-    brand.appendChild(el('span', 'sw-brand__mark'));
-    const nm = el('span', 'sw-brand__name'); nm.textContent = config.brand.name || ''; brand.appendChild(nm);
+    const logoUrl = String(config.brand.logoUrl || '').trim();
+    if (logoUrl) {
+      const logo = el('img', 'sw-brand__logo');
+      logo.src = logoUrl;
+      logo.alt = '';
+      logo.setAttribute('aria-hidden', 'true');
+      logo.decoding = 'async';
+      brand.appendChild(logo);
+    } else {
+      brand.appendChild(el('span', 'sw-brand__mark'));
+    }
+    const brandCopy = el('span', 'sw-brand__copy');
+    const nm = el('span', 'sw-brand__name'); nm.textContent = config.brand.name || ''; brandCopy.appendChild(nm);
+    const description = String(config.brand.description || '').trim();
+    if (description) {
+      const desc = el('span', 'sw-brand__description'); desc.textContent = description; brandCopy.appendChild(desc);
+      brand.title = description;
+    }
+    brand.appendChild(brandCopy);
     topbar.appendChild(brand);
   }
   const nav = el('nav', 'sw-nav'); if (config.nav !== false) topbar.appendChild(nav);
@@ -309,7 +326,7 @@ function mountLetsScroll(container, config) {
       navigationRecoveryTimer = setTimeout(() => {
         resetNavigation();
         navigationStatus.textContent = 'The collection has not opened yet. Please try Order now again.';
-      }, 6500);
+      }, 3200);
       const reduceNow = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduceNow || event.detail === 0) {
         navigateTo(href);
@@ -1101,9 +1118,12 @@ function injectCSS() {
   .sw-scrollbar span{display:block;height:100%;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--sw-accent),#f1d1d2);box-shadow:0 0 16px color-mix(in srgb,var(--sw-accent) 70%,transparent);}
   .sw-topbar{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:clamp(16px,2.8vw,30px) clamp(18px,5vw,64px);}
   .sw-navigation-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;}
-  .sw-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--sw-ink);}
+  .sw-brand{display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;color:var(--sw-ink);}
   .sw-brand__mark{width:24px;height:28px;border-radius:7px 7px 10px 10px;background:linear-gradient(160deg,#e4b9bb,var(--sw-accent) 46%,#542e35);box-shadow:0 6px 18px color-mix(in srgb,var(--sw-accent) 42%,transparent),inset 0 1px rgba(255,255,255,.45);}
+  .sw-brand__logo{width:28px;height:28px;object-fit:contain;border-radius:7px;}
+  .sw-brand__copy{display:flex;min-width:0;flex-direction:column;}
   .sw-brand__name{font-family:var(--sw-font-display);font-weight:600;font-size:1.2rem;letter-spacing:.08em;}
+  .sw-brand__description{max-width:24ch;margin-top:2px;overflow:hidden;color:var(--sw-ink-soft);font-size:.55rem;letter-spacing:.11em;line-height:1.2;text-overflow:ellipsis;text-transform:uppercase;white-space:nowrap;}
   .sw-nav{display:flex;gap:4px;padding:5px;background:rgba(13,11,11,.55);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.13);box-shadow:inset 0 1px rgba(255,255,255,.08),0 14px 40px rgba(0,0,0,.18);border-radius:999px;}
   .sw-nav__item{font:inherit;font-size:.78rem;letter-spacing:.02em;color:var(--sw-ink-soft);border:0;background:transparent;cursor:pointer;padding:8px 15px;border-radius:999px;transition:color .25s,background .25s,transform .25s;}
   .sw-nav__item:hover{color:var(--sw-ink);transform:translateY(-1px);} .sw-nav__item.is-active{color:#160d0e;background:linear-gradient(135deg,#f1d8d7,var(--sw-accent));box-shadow:0 5px 16px color-mix(in srgb,var(--sw-accent) 22%,transparent);}
@@ -1154,20 +1174,20 @@ function injectCSS() {
   .sw-root.is-navigating .sw-sky{animation-name:sw-order-sky-exit;}
   .sw-root.is-navigating .sw-copylayer{animation-name:sw-order-copy-exit;}
   @keyframes sw-order-camera-exit{
-    0%{transform:scale(1);filter:blur(0);opacity:1;}
-    35%{transform:scale(1.12);filter:blur(0);opacity:1;}
-    100%{transform:scale(1.24);filter:blur(14px);opacity:.46;}
-  }
-  @keyframes sw-order-sky-exit{
-    0%{transform:scale(1);filter:blur(0);opacity:1;}
-    35%{transform:scale(1.04);filter:blur(0);opacity:1;}
-    100%{transform:scale(1.1);filter:blur(14px);opacity:.6;}
-  }
-  @keyframes sw-order-copy-exit{
-    0%{transform:scale(1);filter:blur(0);opacity:1;}
-    35%{transform:scale(1.035);filter:blur(0);opacity:.8;}
-    100%{transform:scale(1.08);filter:blur(10px);opacity:0;}
-  }
+     0%{transform:scale(1);filter:blur(0);opacity:1;}
+     32%{transform:scale(1.06);filter:blur(0);opacity:1;}
+     100%{transform:scale(1.12);filter:blur(8px);opacity:.68;}
+   }
+   @keyframes sw-order-sky-exit{
+     0%{transform:scale(1);filter:blur(0);opacity:1;}
+     32%{transform:scale(1.03);filter:blur(0);opacity:1;}
+     100%{transform:scale(1.07);filter:blur(8px);opacity:.76;}
+   }
+   @keyframes sw-order-copy-exit{
+     0%{transform:scale(1);filter:blur(0);opacity:1;}
+     32%{transform:scale(1.02);filter:blur(0);opacity:.86;}
+     100%{transform:scale(1.05);filter:blur(6px);opacity:0;}
+   }
   .sw-root.is-navigating .sw-zoom-link{pointer-events:none;cursor:wait;}
   .sw-track{position:relative;z-index:1;width:100%;pointer-events:none;}
   @media (max-width:1100px){.sw-nav{display:none;}}
@@ -1203,8 +1223,9 @@ function injectCSS() {
   @media (max-width:480px){
     .sw-topbar{gap:12px;padding-inline:18px;}
     .sw-brand{gap:8px;}
-    .sw-brand__mark{width:20px;height:24px;}
+    .sw-brand__mark,.sw-brand__logo{width:20px;height:24px;}
     .sw-brand__name{font-size:1rem;letter-spacing:.07em;}
+    .sw-brand__description{display:none;}
     .sw-topcta{min-width:126px;padding-inline:16px;gap:10px;}
   }
   @media (prefers-reduced-motion:reduce){

@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import PublicPageFrame from "@/components/PublicPageFrame";
 
 export const metadata: Metadata = {
   title: "Frequently asked questions | FLOMIRA",
-  description: "Learn how FLOMIRA’s storefront preview, local drafts, sample prices, dietary requests, and cake care guidance work.",
+  description: "Learn how FLOMIRA’s storefront preview, live order requests, local drafts, sample prices, dietary requests, and cake care guidance work.",
 };
 
 const questions = [
   {
     question: "Can I place an order or pay here?",
-    answer: "Not yet. This is a storefront preview for exploring cakes and preparing a plan. Checkout creates a local draft only after you review the details and consent to device storage. No order is sent, no payment is taken, and no date or cake is reserved. Ordering and payment arrangements will be confirmed before launch.",
+    answer: "Product detail pages can submit a live order request when delivery settings are configured. The request is saved as pending for FLOMIRA staff to review; availability, timing, delivery, and the final quote are confirmed with you, and no online payment is taken here. The preview cart and checkout remain local-only: saving a draft does not send an order, reserve a date, or reserve a cake.",
   },
   {
     question: "Are the prices a final quote?",
@@ -45,26 +46,32 @@ const questions = [
   },
   {
     question: "Can I change, cancel, or track a draft?",
-    answer: "A draft is not a submitted order, so there is nothing to cancel or track with a business. You can remove saved drafts at any time and prepare a fresh one using your cart. Printed, copied, or downloaded versions are separate copies you manage yourself. Real order-change, cancellation, refund, and payment policies will need to be published before launch.",
+    answer: "A saved draft is not a submitted order, so there is nothing to cancel or track with a business. You can remove saved drafts at any time and prepare a fresh one using your cart. Product detail submissions are separate pending order requests; after sending one, contact FLOMIRA directly for changes or cancellation. Printed, copied, or downloaded versions are separate copies you manage yourself, and payment/refund policies still need to be confirmed.",
   },
 ];
 
 export default function FaqPage() {
-  return <div className="shop-page">
-    <div className="mb-12 max-w-3xl">
-      <p className="eyebrow mb-4">A little clarity, before the celebration</p>
-      <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">Good to know.</h1>
-      <p className="muted mt-5 text-lg leading-relaxed sm:text-xl">Thoughtful plans start with clear expectations. Here’s how this storefront preview works, and what still needs a real conversation.</p>
+  return <PublicPageFrame>
+    <div className="shop-page">
+      <header className="mb-12 max-w-3xl">
+        <p className="eyebrow mb-4">A little clarity, before the celebration</p>
+        <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">Good to know.</h1>
+        <p className="muted mt-5 text-lg leading-relaxed sm:text-xl">Thoughtful plans start with clear expectations. Here’s how this storefront preview works, and what still needs a real conversation.</p>
+        <nav className="mt-6 flex flex-wrap gap-3" aria-label="FAQ shortcuts">
+          <Link href="/products" className="button-secondary">Explore cakes</Link>
+          <Link href="/cart" className="inline-flex min-h-11 items-center px-1 text-sm text-[#cba0a5] underline underline-offset-4 hover:text-white">Review your cart</Link>
+        </nav>
+      </header>
+      <div className="max-w-4xl space-y-4">
+        {questions.map(({ question, answer }, index) => <details className="surface group p-6 sm:p-7" key={question} open={index === 0}>
+          <summary className="cursor-pointer text-lg font-semibold leading-relaxed marker:text-[#cba0a5] sm:text-xl">{question}</summary>
+          <p className="muted mt-5 text-base leading-8">{answer}</p>
+        </details>)}
+      </div>
+      <div className="surface mt-10 flex max-w-4xl flex-wrap items-center justify-between gap-6 p-6 sm:p-8">
+        <div><h2 className="text-2xl font-semibold">Have something special in mind?</h2><p className="muted mt-2">Gather the details into a local inquiry draft.</p></div>
+        <Link href="/contact" className="button-primary">Prepare an inquiry</Link>
+      </div>
     </div>
-    <div className="max-w-4xl space-y-4">
-      {questions.map(({ question, answer }, index) => <details className="surface group p-6 sm:p-7" key={question} open={index === 0}>
-        <summary className="cursor-pointer text-lg font-semibold leading-relaxed marker:text-[#cba0a5] sm:text-xl">{question}</summary>
-        <p className="muted mt-5 text-base leading-8">{answer}</p>
-      </details>)}
-    </div>
-    <div className="surface mt-10 flex max-w-4xl flex-wrap items-center justify-between gap-6 p-6 sm:p-8">
-      <div><h2 className="text-2xl font-semibold">Have something special in mind?</h2><p className="muted mt-2">Gather the details into a local inquiry draft.</p></div>
-      <Link href="/contact" className="button-primary">Prepare an inquiry</Link>
-    </div>
-  </div>;
+  </PublicPageFrame>;
 }

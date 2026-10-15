@@ -144,7 +144,7 @@ export default function InquiryForm() {
         <button type="button" className="button-secondary" disabled={copying} onClick={edit}>Edit details</button>
       </div>
       <p className="muted text-sm leading-relaxed">Your copied or downloaded draft includes your personal details. Keep it private. This form does not save details in browser local storage; leaving or refreshing this page clears the in-memory draft.</p>
-      {feedback && <p className="rounded-xl border border-[#b76e79]/40 p-4" role="status">{feedback}</p>}
+      {feedback && <p className="surface border border-[#b76e79]/40 p-4" role="status">{feedback}</p>}
       {actionError && <p className="form-error" role="alert">{actionError}</p>}
       <div>
         <label className="field-label" htmlFor="inquiry-preview">Inquiry draft text — not sent</label>
@@ -154,8 +154,8 @@ export default function InquiryForm() {
       <button type="button" className="button-secondary" disabled={copying} onClick={clear}>Clear inquiry & personal details</button>
     </div> : <form className="space-y-6" onSubmit={prepare} noValidate>
       <div><h2 className="text-2xl font-semibold">Begin with an idea.</h2><p className="muted mt-3 leading-relaxed">Prepare an inquiry draft here. This preview does not send messages. Fields marked * are required; the rest can stay open.</p></div>
-      {feedback && <p className="rounded-xl border border-[#b76e79]/40 p-4" role="status">{feedback}</p>}
-      {Object.keys(errors).length > 0 && <div role="alert" ref={errorSummary} tabIndex={-1} className="rounded-xl border border-[#cba0a5]/50 p-5 outline-none"><h3 className="font-semibold">Please check these details.</h3><ul className="mt-3 list-disc space-y-2 pl-5 text-sm">{Object.entries(errors).map(([key, message]) => <li key={key}><a className="underline underline-offset-4" href={`#inquiry-${key}`}>{message}</a></li>)}</ul></div>}
+       {feedback && <p className="surface border border-[#b76e79]/40 p-4" role="status">{feedback}</p>}
+       {Object.keys(errors).length > 0 && <div role="alert" ref={errorSummary} tabIndex={-1} className="surface border border-[#cba0a5]/50 bg-[#b76e79]/10 p-5 outline-none"><h3 className="font-semibold">Please check these details.</h3><ul className="mt-3 list-disc space-y-2 pl-5 text-sm">{Object.entries(errors).map(([key, message]) => <li key={key}><a className="underline underline-offset-4" href={`#inquiry-${key}`}>{message}</a></li>)}</ul></div>}
       <div className="grid gap-5 sm:grid-cols-2">
         {(Object.keys(LABELS) as (keyof Inquiry)[]).map((key) => {
           const required = key === "name" || key === "email" || key === "occasion" || key === "message";
