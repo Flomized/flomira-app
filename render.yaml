@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: flomira
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NEXT_PUBLIC_FIREBASE_API_KEY
+        value: AIzaSyCwf3h971A2Uhr4iNM-lYRLoxaEKVprHHA
+      - key: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+        value: flomiradb.firebaseapp.com
+      - key: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+        value: flomiradb
+      - key: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+        value: flomiradb.firebasestorage.app
+      - key: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+        value: "910466904945"
+      - key: NEXT_PUBLIC_FIREBASE_APP_ID
+        value: "1:910466904945:web:a42ced2e5c8a5dbc7aef2a"
+      - key: NEXT_PUBLIC_WEBSITE_ID
+        value: default
+      - key: NODE_VERSION
+        value: "20"
