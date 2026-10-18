@@ -1,0 +1,17 @@
+name: Keep Alive
+
+on:
+  schedule:
+    # Run every 12 minutes (Render spins down after 15 minutes of inactivity)
+    - cron: '*/12 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Service
+        run: |
+          URL="${{ secrets.RENDER_APP_URL || vars.RENDER_APP_URL || 'https://flomira.onrender.com' }}"
+          echo "Hitting $URL/api/health"
+          curl -f -s -S -m 30 "$URL/api/health" || curl -f -s -S -m 30 "$URL"
