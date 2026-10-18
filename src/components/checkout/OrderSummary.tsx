@@ -48,7 +48,7 @@ export default function OrderSummary({ order }: { order: OrderSummaryData }) {
                 <div>
                   <p className="font-semibold">{item.productName} <span className="muted">× {item.quantity}</span></p>
                   <p className="muted mt-1">{item.sizeLabel} · {item.servings} · {item.flavor}</p>
-                  <p className="muted mt-1 text-sm">Sample unit price {formatMoney(item.unitPriceCents)} USD</p>
+                  <p className="muted mt-1 text-sm">Sample unit price {formatMoney(item.unitPriceCents)}</p>
                 </div>
                 <p className="shrink-0 font-medium">{formatMoney(item.unitPriceCents * item.quantity)}</p>
               </div>
@@ -57,11 +57,11 @@ export default function OrderSummary({ order }: { order: OrderSummaryData }) {
           ))}
         </ul>
         <dl className="mt-4 space-y-3 border-t border-white/15 pt-5">
-          <div className="flex flex-wrap justify-between gap-3 text-lg font-semibold"><dt>Sample cake subtotal</dt><dd>{formatMoney(order.sampleSubtotalCents)} USD</dd></div>
+          <div className="flex flex-wrap justify-between gap-3 text-lg font-semibold"><dt>Sample cake subtotal</dt><dd>{formatMoney(order.sampleSubtotalCents)}</dd></div>
           <div className="flex flex-wrap justify-between gap-3 text-sm"><dt className="muted">Delivery / pickup arrangements</dt><dd>To be quoted & confirmed</dd></div>
           <div className="flex flex-wrap justify-between gap-3 text-sm"><dt className="muted">Taxes & any additional fees</dt><dd>To be confirmed</dd></div>
         </dl>
-        <p className="muted mt-4 text-sm leading-relaxed">Illustrative USD pricing, not a final quote or an all-in total. Delivery fees, taxes, customization, service area, and payment are not configured.</p>
+        <p className="muted mt-4 text-sm leading-relaxed">Illustrative TK pricing, not a final quote or an all-in total. Delivery fees, taxes, customization, service area, and payment are not configured.</p>
       </div>
 
       <div className="grid gap-8 sm:grid-cols-2">

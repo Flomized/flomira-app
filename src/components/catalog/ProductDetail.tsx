@@ -129,7 +129,7 @@ export function ProductDetail({ product, compact = false }: { product: Product; 
 
             <div className="flex flex-wrap items-end justify-between gap-4 border-t border-white/10 pt-6">
               <div>
-                <p className="mb-1 text-xs uppercase tracking-[0.16em] text-[#aaaaaa]">Sample item total · USD</p>
+                <p className="mb-1 text-xs uppercase tracking-[0.16em] text-[#aaaaaa]">Sample item total · TK</p>
                 <output aria-live="polite" aria-label="Sample item total" className="text-3xl font-medium tracking-tight">{formatMoney(sampleTotal)}</output>
                 <p className="mt-1 text-xs text-[#aaaaaa]">{quantity} × {formatMoney(selectedSize.price)} · taxes and delivery not calculated</p>
               </div>

@@ -285,7 +285,7 @@ export default function CheckoutPlanner() {
           <aside className="surface space-y-5 p-6 lg:sticky lg:top-28" aria-label="Sample estimate">
             <p className="eyebrow">A first look</p><h2 className="text-2xl font-semibold">Sample estimate</h2>
             <p className="muted">{cart.count} cake{cart.count === 1 ? "" : "s"} selected</p>
-            <div className="border-y border-white/10 py-5"><p className="muted text-sm">Cake subtotal · sample USD</p><p className="mt-2 text-3xl font-semibold">{formatMoney(cart.subtotal)}</p></div>
+            <div className="border-y border-white/10 py-5"><p className="muted text-sm">Cake subtotal · sample TK</p><p className="mt-2 text-3xl font-semibold">{formatMoney(cart.subtotal)}</p></div>
             <p className="muted leading-relaxed">Delivery, taxes, and any customization fees are to be quoted. This is not a final total. Payment is not available in this preview.</p>
             <Link href="/cart" className="button-secondary w-full">Edit cake selections</Link>
             <Link href="/faq" className="inline-block text-sm text-[#cba0a5] underline underline-offset-4">How this preview works</Link>

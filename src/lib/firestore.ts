@@ -307,7 +307,7 @@ export async function submitOrder(formData: OrderFormData): Promise<string> {
 // ============================================================================
 
 export function formatPrice(price: number): string {
-  return `$${price.toFixed(2)}`;
+  return `${price.toFixed(2)} TK`;
 }
 
 export function isBusinessOpen(hours: BusinessSettings['hours']): boolean {

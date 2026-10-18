@@ -93,10 +93,11 @@ export function getProductBySlug(slug: string, catalog: Catalog = products): Pro
 }
 
 const moneyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 export function formatMoney(cents: number): string {
-  return moneyFormatter.format(cents / 100);
+  return `${moneyFormatter.format(cents / 100)} TK`;
 }
+

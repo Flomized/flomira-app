@@ -113,7 +113,7 @@ export function CartView() {
               <div className="flex justify-between gap-4"><dt className="muted">Delivery / pickup</dt><dd className="muted text-right">Not configured</dd></div>
               <div className="flex justify-between gap-4 border-t border-white/10 pt-5 text-lg"><dt>Sample subtotal</dt><dd className="text-[#e0bdc3]">{formatMoney(subtotal)}</dd></div>
             </dl>
-            <p className="muted mt-3 text-xs leading-relaxed">USD · This is not a final quote. Taxes and fulfillment charges are not included.</p>
+            <p className="muted mt-3 text-xs leading-relaxed">TK · This is not a final quote. Taxes and fulfillment charges are not included.</p>
             <p className="muted my-6 border-y border-white/10 py-5 text-sm leading-relaxed">Sample preparation estimate: {leadTime} days. This illustrative lead time does not reserve a date or confirm availability.</p>
             <Link href="/checkout" className="button-primary w-full text-center">Preview checkout <span aria-hidden="true">→</span></Link>
             <p className="muted mt-4 text-center text-xs leading-relaxed">No submission or payment. Continue to review the preview flow.</p>

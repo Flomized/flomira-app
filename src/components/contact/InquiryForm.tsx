@@ -13,7 +13,7 @@ const EMPTY: Inquiry = { name: "", email: "", occasion: "", date: "", servings: 
 const LIMITS: Record<keyof Inquiry, number> = { name: 80, email: 254, occasion: 100, date: 10, servings: 4, budget: 9, message: 2000 };
 const LABELS: Record<keyof Inquiry, string> = {
   name: "Full name", email: "Email", occasion: "Occasion", date: "Desired date",
-  servings: "Approximate servings", budget: "Budget preference (USD)", message: "Your ideas & requests",
+  servings: "Approximate servings", budget: "Budget preference (TK)", message: "Your ideas & requests",
 };
 
 function validateInquiry(input: Inquiry, today: string): { details: Inquiry; errors: InquiryErrors } {
@@ -25,7 +25,7 @@ function validateInquiry(input: Inquiry, today: string): { details: Inquiry; err
   if (details.message.length < 10) errors.message = "Add at least 10 characters about your ideas or request.";
   if (details.date && (!isCalendarDate(details.date) || details.date < today || details.date > addCalendarDays(today, MAX_HORIZON_DAYS))) errors.date = `Choose a date from today through ${formatRequestedDate(addCalendarDays(today, MAX_HORIZON_DAYS))}, or leave it open.`;
   if (details.servings && (!/^\d+$/.test(details.servings) || Number(details.servings) < 1 || Number(details.servings) > 1000)) errors.servings = "Enter a whole number from 1 to 1,000, or leave this blank.";
-  if (details.budget && (!/^\d{1,6}(\.\d{1,2})?$/.test(details.budget) || Number(details.budget) <= 0 || Number(details.budget) > 100000)) errors.budget = "Enter a USD amount from 0.01 to 100,000 with at most two decimal places, or leave this blank.";
+  if (details.budget && (!/^\d{1,8}(\.\d{1,2})?$/.test(details.budget) || Number(details.budget) <= 0 || Number(details.budget) > 10000000)) errors.budget = "Enter a TK amount from 1 to 10,000,000 with at most two decimal places, or leave this blank.";
   for (const key of Object.keys(LIMITS) as (keyof Inquiry)[]) {
     if (input[key].length > LIMITS[key]) errors[key] = `Use ${LIMITS[key]} characters or fewer.`;
   }
@@ -42,7 +42,7 @@ function inquiryText(details: Inquiry): string {
     `Occasion: ${details.occasion}`,
     `Desired date: ${details.date ? formatRequestedDate(details.date) : "Open / to be discussed"}`,
     `Approximate servings: ${details.servings || "To be discussed"}`,
-    `Budget preference: ${details.budget ? `$${Number(details.budget).toFixed(2)} USD (a preference, not a quote)` : "To be discussed"}`,
+    `Budget preference: ${details.budget ? `${Number(details.budget).toFixed(2)} TK (a preference, not a quote)` : "To be discussed"}`,
     "",
     "Ideas & requests:", details.message,
     "",
@@ -161,7 +161,7 @@ export default function InquiryForm() {
           const required = key === "name" || key === "email" || key === "occasion" || key === "message";
           const hint = key === "date" ? "Optional, within 180 days. Device-local dates; a preference, not a reservation."
             : key === "servings" ? "Optional, from 1 to 1,000. Final cake sizing is to be discussed."
-            : key === "budget" ? "Optional sample USD budget, not a quote. No payment is taken."
+            : key === "budget" ? "Optional sample TK budget, not a quote. No payment is taken."
             : key === "message" ? "Up to 2,000 characters. Include style or dietary requests; please do not include payment details. An allergen-free cake cannot be guaranteed."
             : "";
           const props = {
