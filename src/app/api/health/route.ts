@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
+import { connection, NextResponse } from 'next/server';
 
 export async function GET() {
+  await connection();
   return NextResponse.json(
     {
       status: 'ok',
@@ -19,6 +18,7 @@ export async function GET() {
 }
 
 export async function HEAD() {
+  await connection();
   return new Response(null, {
     status: 200,
     headers: {
