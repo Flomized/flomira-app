@@ -87,7 +87,7 @@ export default function SavedDrafts() {
         <h2 className="text-xl font-semibold">{draft.items[0].productName}{draft.items.length > 1 ? ` + ${draft.items.length - 1} more selection${draft.items.length > 2 ? "s" : ""}` : ""}</h2>
         <p className="muted mt-3">For {draft.details.name}</p>
         <p className="muted mt-1">Requested: {formatRequestedDate(draft.details.date)}</p>
-        <p className="mt-4 font-medium">Sample cake subtotal: {formatMoney(draft.sampleSubtotalCents)} USD</p>
+        <p className="mt-4 font-medium">Sample cake subtotal: {formatMoney(draft.sampleSubtotalCents)}</p>
         <p className="muted mt-3 break-all font-mono text-xs">{draft.reference}</p>
         <p className="muted mt-2 text-sm">Saved {new Date(draft.createdAt).toLocaleString("en-US")}</p>
         <div className="mt-6 flex flex-wrap gap-3">

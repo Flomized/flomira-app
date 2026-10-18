@@ -14,7 +14,7 @@ const questions = [
   },
   {
     question: "Are the prices a final quote?",
-    answer: "All displayed prices are illustrative sample prices in USD. The planner shows a sample cake subtotal, not an all-in total. Delivery, taxes, design changes, and any other fees need a final business quote. Unconfigured fees are not promises of free delivery or zero tax.",
+    answer: "All displayed prices are illustrative sample prices in TK. The planner shows a sample cake subtotal, not an all-in total. Delivery, taxes, design changes, and any other fees need a final business quote. Unconfigured fees are not promises of free delivery or zero tax.",
   },
   {
     question: "How far ahead should I plan?",
