@@ -113,6 +113,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
             <Link href="/orders">Saved drafts</Link>
             <Link href="/contact">Contact</Link>
             <Link href="/faq">FAQ</Link>
+            <Link href="/privacy">Privacy Policy</Link>
           </div>
         </div>
         <div className="site-footer__bottom">
