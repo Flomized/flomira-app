@@ -60,7 +60,7 @@ function executeDeepLink(e: React.MouseEvent, params: DeepLinkParams) {
   e.preventDefault();
 
   // 1. Android: Native Intent URI with OS-level browser_fallback_url
-  // If the app is installed, Android switches to it instantly.
+  // If the app is installed, Android switches directly to the target profile.
   // If not installed, Chrome immediately opens the web fallback URL with zero errors.
   if (isAndroid) {
     if (channel.id === 'youtube') {
@@ -68,11 +68,16 @@ function executeDeepLink(e: React.MouseEvent, params: DeepLinkParams) {
       return;
     }
     if (channel.id === 'facebook') {
-      window.location.href = `intent://facebook.com/${fbPage}#Intent;package=com.facebook.katana;scheme=https;S.browser_fallback_url=${encodeURIComponent(fbUrl)};end;`;
+      const isNumericFb = /^\d+$/.test(fbPage);
+      const fbIntent = isNumericFb
+        ? `intent://page/${fbPage}#Intent;package=com.facebook.katana;scheme=fb;S.browser_fallback_url=${encodeURIComponent(fbUrl)};end;`
+        : `intent://facewebmodal/f?href=https://www.facebook.com/${fbPage}#Intent;package=com.facebook.katana;scheme=fb;S.browser_fallback_url=${encodeURIComponent(fbUrl)};end;`;
+      window.location.href = fbIntent;
       return;
     }
     if (channel.id === 'instagram') {
-      window.location.href = `intent://instagram.com/_u/${igUsername}#Intent;package=com.instagram.android;scheme=https;S.browser_fallback_url=${encodeURIComponent(igUrl)};end;`;
+      // Note the required trailing slash after username to match Instagram's Android path filter
+      window.location.href = `intent://instagram.com/_u/${igUsername}/#Intent;package=com.instagram.android;scheme=https;S.browser_fallback_url=${encodeURIComponent(igUrl)};end;`;
       return;
     }
     if (channel.id === 'whatsapp') {
@@ -91,7 +96,7 @@ function executeDeepLink(e: React.MouseEvent, params: DeepLinkParams) {
 
   // 2. iOS: Attempt app URI scheme with smart visibility fallback
   // If the app is installed, iOS launches the app immediately and hides the web page.
-  // If the app is not installed, it falls back to loading the web URL directly.
+  // If the app is not installed, it falls back to loading the web URL directly without disrupting the user.
   if (isIOS) {
     if (channel.id === 'whatsapp') {
       window.location.href = waUrl;
@@ -104,9 +109,12 @@ function executeDeepLink(e: React.MouseEvent, params: DeepLinkParams) {
 
     let appScheme = channel.scheme;
     if (channel.id === 'youtube') {
-      appScheme = `youtube://www.youtube.com/${ytHandle}`;
+      appScheme = `vnd.youtube://www.youtube.com/${ytHandle}`;
     } else if (channel.id === 'facebook') {
-      appScheme = `fb://facewebmodal/f?href=${encodeURIComponent(fbUrl)}`;
+      const isNumericFb = /^\d+$/.test(fbPage);
+      appScheme = isNumericFb
+        ? `fb://page/?id=${fbPage}`
+        : `fb://facewebmodal/f?href=https://www.facebook.com/${fbPage}`;
     } else if (channel.id === 'instagram') {
       appScheme = `instagram://user?username=${igUsername}`;
     } else if (channel.id === 'gmail') {
@@ -114,26 +122,34 @@ function executeDeepLink(e: React.MouseEvent, params: DeepLinkParams) {
     }
 
     let appOpened = false;
+    let fallbackTimer: number | null = null;
+
     const markOpened = () => {
       appOpened = true;
+      if (fallbackTimer) {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
     };
 
     window.addEventListener('pagehide', markOpened, { once: true });
+    window.addEventListener('blur', markOpened, { once: true });
     const handleVisibility = () => {
-      if (document.hidden) appOpened = true;
+      if (document.hidden) markOpened();
     };
     document.addEventListener('visibilitychange', handleVisibility, { once: true });
 
-    const startTime = Date.now();
     window.location.href = appScheme;
 
-    window.setTimeout(() => {
+    // Generous timer: allows iOS prompt ("Open in Instagram?") to complete without racing against web redirect
+    fallbackTimer = window.setTimeout(() => {
+      window.removeEventListener('pagehide', markOpened);
+      window.removeEventListener('blur', markOpened);
       document.removeEventListener('visibilitychange', handleVisibility);
-      // If page is still visible and less than 1.8s elapsed, app wasn't opened -> load web URL
-      if (!appOpened && !document.hidden && Date.now() - startTime < 1800) {
+      if (!appOpened && !document.hidden) {
         window.location.href = channel.webUrl;
       }
-    }, 500);
+    }, 2200);
     return;
   }
 
@@ -297,7 +313,7 @@ export default function ReachUsView() {
       badgeBg: 'bg-blue-950/80 border-blue-500/30 text-blue-300',
       badgeText: 'Opens in App',
       webUrl: fbUrl,
-      scheme: `fb://facewebmodal/f?href=${encodeURIComponent(fbUrl)}`,
+      scheme: /^\d+$/.test(fbPage) ? `fb://page/?id=${fbPage}` : `fb://facewebmodal/f?href=https://www.facebook.com/${fbPage}`,
       copyValue: fbUrl,
       copyLabel: 'Facebook link',
     },
