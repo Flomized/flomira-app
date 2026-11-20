@@ -66,7 +66,8 @@ test('reachus renders the official emblem and infinity cherry blossom falling an
 
 test('reachus points to all channels under flomira0910 and +880 1621-084775', () => {
   assert.match(view, /flomira0910@gmail\.com/);
-  assert.match(view, /facebook\.com\/flomira0910/);
+  assert.match(view, /mailto:\$\{rawEmail\}/);
+  assert.match(view, /facebook\.com\/share\/1Dazb4HBkt/);
   assert.match(view, /instagram\.com\/flomira0910/);
   assert.match(view, /youtube\.com\/@flomira0910/);
   assert.match(view, /8801621084775/);

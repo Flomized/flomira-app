@@ -71,7 +71,7 @@ function executeDeepLink(e: React.MouseEvent, params: DeepLinkParams) {
       const isNumericFb = /^\d+$/.test(fbPage);
       const fbIntent = isNumericFb
         ? `intent://page/${fbPage}#Intent;package=com.facebook.katana;scheme=fb;S.browser_fallback_url=${encodeURIComponent(fbUrl)};end;`
-        : `intent://facewebmodal/f?href=https://www.facebook.com/${fbPage}#Intent;package=com.facebook.katana;scheme=fb;S.browser_fallback_url=${encodeURIComponent(fbUrl)};end;`;
+        : `intent://facewebmodal/f?href=${encodeURIComponent(fbUrl)}#Intent;package=com.facebook.katana;scheme=fb;S.browser_fallback_url=${encodeURIComponent(fbUrl)};end;`;
       window.location.href = fbIntent;
       return;
     }
@@ -85,7 +85,8 @@ function executeDeepLink(e: React.MouseEvent, params: DeepLinkParams) {
       return;
     }
     if (channel.id === 'gmail') {
-      window.location.href = `intent://#Intent;action=android.intent.action.SENDTO;data=mailto:${encodeURIComponent(rawEmail)}?subject=${encodeURIComponent('Cake Inquiry - FLOMIRA')};package=com.google.android.gm;S.browser_fallback_url=${encodeURIComponent(`https://mail.google.com/mail/?view=cm&fs=1&to=${rawEmail}&su=Cake Inquiry - FLOMIRA`)};end;`;
+      // Direct universal mailto: immediately launches default email client (Gmail, Samsung Email, Outlook) on Android
+      window.location.href = `mailto:${rawEmail}?subject=${encodeURIComponent('Cake Inquiry - FLOMIRA')}`;
       return;
     }
     if (channel.id === 'phone') {
@@ -114,7 +115,7 @@ function executeDeepLink(e: React.MouseEvent, params: DeepLinkParams) {
       const isNumericFb = /^\d+$/.test(fbPage);
       appScheme = isNumericFb
         ? `fb://page/?id=${fbPage}`
-        : `fb://facewebmodal/f?href=https://www.facebook.com/${fbPage}`;
+        : `fb://facewebmodal/f?href=${fbUrl}`;
     } else if (channel.id === 'instagram') {
       appScheme = `instagram://user?username=${igUsername}`;
     } else if (channel.id === 'gmail') {
@@ -266,7 +267,7 @@ export default function ReachUsView() {
   const rawPhone = settings?.phoneNumber?.trim() || '+8801621084775';
   const rawWhatsApp = settings?.whatsappNumber || '8801621084775';
 
-  const rawFb = settings?.socialMedia?.facebook?.trim() || 'https://www.facebook.com/flomira0910';
+  const rawFb = settings?.socialMedia?.facebook?.trim() || 'https://www.facebook.com/share/1Dazb4HBkt/';
   const rawIg = settings?.socialMedia?.instagram?.trim() || 'https://www.instagram.com/flomira0910';
   const rawYt = settings?.socialMedia?.youtube?.trim() || 'https://www.youtube.com/@flomira0910';
 
@@ -305,7 +306,7 @@ export default function ReachUsView() {
       name: 'Facebook Page',
       title: 'Official Facebook Page',
       subtitle: 'Community updates, reviews, photo galleries & drops',
-      badge: fbPage ? `@${fbPage}` : '@flomira0910',
+      badge: '@flomira0910',
       iconType: 'facebook',
       accentColor: 'from-[#1877F2] to-[#0A53BE]',
       glowColor: 'rgba(24, 119, 242, 0.35)',
@@ -313,7 +314,7 @@ export default function ReachUsView() {
       badgeBg: 'bg-blue-950/80 border-blue-500/30 text-blue-300',
       badgeText: 'Opens in App',
       webUrl: fbUrl,
-      scheme: /^\d+$/.test(fbPage) ? `fb://page/?id=${fbPage}` : `fb://facewebmodal/f?href=https://www.facebook.com/${fbPage}`,
+      scheme: `fb://facewebmodal/f?href=${fbUrl}`,
       copyValue: fbUrl,
       copyLabel: 'Facebook link',
     },
@@ -363,7 +364,7 @@ export default function ReachUsView() {
       borderColor: 'border-amber-500/30 hover:border-amber-400/70',
       badgeBg: 'bg-amber-950/80 border-amber-500/30 text-amber-300',
       badgeText: 'Compose',
-      webUrl: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(rawEmail)}&su=${encodeURIComponent('Cake Inquiry - FLOMIRA')}`,
+      webUrl: `mailto:${rawEmail}?subject=${encodeURIComponent('Cake Inquiry - FLOMIRA')}`,
       scheme: `mailto:${rawEmail}?subject=${encodeURIComponent('Cake Inquiry - FLOMIRA')}`,
       copyValue: rawEmail,
       copyLabel: 'Email address',
