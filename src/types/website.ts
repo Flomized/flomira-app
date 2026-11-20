@@ -62,6 +62,7 @@ export interface SocialMedia {
   instagram?: string;
   twitter?: string;
   tiktok?: string;
+  youtube?: string;
 }
 
 export interface BusinessSettings {

@@ -1,12 +1,18 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useBusinessSettings } from './BusinessSettingsProvider';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
 
 export default function WhatsAppButton() {
+  const pathname = usePathname();
   const { settings, loading } = useBusinessSettings();
   const whatsappNumber = settings?.whatsappNumber;
   const whatsappUrl = getWhatsAppUrl(whatsappNumber, 'Hi! I would like to inquire about your products.');
+
+  if (pathname === '/reachus') {
+    return null;
+  }
 
   if (loading || !whatsappUrl) {
     return null;
