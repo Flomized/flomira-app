@@ -222,17 +222,24 @@ export default function ReachUsView() {
     showToast('FLOMIRA contact file (.vcf) downloaded! 📇');
   };
 
-  // Helper to extract clean handles from URLs
-  const cleanHandle = (urlOrHandle: string | undefined, defaultHandle: string) => {
-    if (!urlOrHandle || !urlOrHandle.trim()) return defaultHandle;
+  // Helper to extract clean bare handle (guarantees no leading '@' repetitions)
+  const getBareHandle = (urlOrHandle: string | undefined, defaultHandle: string) => {
+    if (!urlOrHandle || !urlOrHandle.trim()) {
+      return defaultHandle.replace(/^@+/, '');
+    }
     const trimmed = urlOrHandle.trim();
-    if (!trimmed.startsWith('http')) return trimmed.startsWith('@') ? trimmed : `@${trimmed}`;
+    if (!trimmed.startsWith('http')) {
+      return trimmed.replace(/^@+/, '');
+    }
     try {
       const parsed = new URL(trimmed);
       const parts = parsed.pathname.split('/').filter(Boolean);
-      return parts.length > 0 ? `@${parts[parts.length - 1]}` : defaultHandle;
+      if (parts.length > 0) {
+        return parts[parts.length - 1].replace(/^@+/, '');
+      }
+      return defaultHandle.replace(/^@+/, '');
     } catch {
-      return defaultHandle;
+      return defaultHandle.replace(/^@+/, '');
     }
   };
 
@@ -247,13 +254,14 @@ export default function ReachUsView() {
   const rawIg = settings?.socialMedia?.instagram?.trim() || 'https://www.instagram.com/flomira0910';
   const rawYt = settings?.socialMedia?.youtube?.trim() || 'https://www.youtube.com/@flomira0910';
 
-  const fbUrl = rawFb.startsWith('http') ? rawFb : `https://www.facebook.com/${rawFb.replace(/^@/, '')}`;
-  const igUrl = rawIg.startsWith('http') ? rawIg : `https://www.instagram.com/${rawIg.replace(/^@/, '')}`;
-  const ytUrl = rawYt.startsWith('http') ? rawYt : `https://www.youtube.com/${rawYt.startsWith('@') ? rawYt : `@${rawYt}`}`;
+  const fbPage = getBareHandle(rawFb, 'flomira0910');
+  const igUsername = getBareHandle(rawIg, 'flomira0910');
+  const ytUsername = getBareHandle(rawYt, 'flomira0910');
+  const ytHandle = `@${ytUsername}`;
 
-  const igUsername = cleanHandle(rawIg, '@flomira0910').replace('@', '');
-  const fbPage = cleanHandle(rawFb, 'flomira0910').replace('@', '');
-  const ytHandle = cleanHandle(rawYt, '@flomira0910');
+  const fbUrl = rawFb.startsWith('http') ? rawFb : `https://www.facebook.com/${fbPage}`;
+  const igUrl = rawIg.startsWith('http') ? rawIg : `https://www.instagram.com/${igUsername}`;
+  const ytUrl = rawYt.startsWith('http') ? rawYt : `https://www.youtube.com/${ytHandle}`;
 
   const waDigits = normalizeWhatsAppNumber(rawWhatsApp) || '8801621084775';
   const waUrl = getWhatsAppUrl(waDigits, 'Hello FLOMIRA! I would like to inquire about your cakes.') || `https://wa.me/${waDigits}`;

@@ -71,4 +71,5 @@ test('reachus points to all channels under flomira0910 and +880 1621-084775', ()
   assert.match(view, /youtube\.com\/@flomira0910/);
   assert.match(view, /8801621084775/);
   assert.doesNotMatch(view, /flomira\.official/);
+  assert.doesNotMatch(view, /@@/); // Guarantees no double @ anywhere
 });
